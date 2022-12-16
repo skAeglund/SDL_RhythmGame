@@ -1,6 +1,7 @@
 # SDL_RhythmGame
 
-This is a project made by Anders Hägglund 2022-12-16 for an assignment in data oriented programming.
+This is a project made by Anders Hägglund 2022-12-16 for an assignment in data oriented programming.        
+Executable file located in "BUILD" folder.
 
 Game description:   
 You play the game by shooting rocks in synch with the music.    
@@ -13,11 +14,11 @@ Instead of creating structs/classes of enemies/rocks/lasers etc. I created lists
 Positions, velocities, rotations, textures and tags.
 So an "object" doesn't really "exist", it's just an index in all those lists. 
 
-When I move the objects, I only use the positions, velocities and tags (an Enum that seperates between immovable objects).     
-      - > in engine.cpp -> moveObjects()
+When I move the objects, I only use the positions, velocities and tags (an Enum that seperates between immovable objects).        
+------ > in engine.cpp -> moveObjects()
       
-When I draw the objects, I only use the textures, positions and rotations.      
-      - > in engine.cpp -> drawObjects()
+When I draw the objects, I only use the textures, positions and rotations.             
+ ----- > in engine.cpp -> drawObjects()            
 I use the same principles many other cases (in engine.cpp).
 
 Performance description:      
@@ -30,5 +31,4 @@ since this would mean that they couldn't collide, and neither could the followin
 
 Notes:     
 I didn't have time to polish and structure the code the way I had planned to. I got too ambitious for the deadline and kept adding features until
-the last day. But I don't regret anything, because the game is pretty sweet. 
-
+the last day. But I don't regret anything, because the game is pretty sweet.
