@@ -10,7 +10,7 @@ If you shoot a rock with incorrect timing, the rock will become indestructible &
 There are three different levels (songs) that increases in tempo and difficulty. 
 
 Data oriented description:    
-Instead of creating structs/classes of enemies/rocks/lasers etc. I created lists of the following attributes that defines a movable object:      
+Instead of creating classes with draw() & move() functions, I created lists of the following attributes that defines a movable object:      
 Positions, velocities, rotations, textures and tags.
 So an "object" doesn't really "exist", it's just an index in all those lists. 
 
@@ -32,3 +32,6 @@ since this would mean that they couldn't collide, and neither could the followin
 Notes:     
 I didn't have time to polish and structure the code the way I had planned to. I got too ambitious for the deadline and kept adding features until
 the last day. But I don't regret anything, because the game is pretty sweet.
+
+If I had more time I would move some stuff away from engine.cpp, because that script is gigantic, and it doesn't really make sense for the engine
+to know what a laser is (among other things). 
