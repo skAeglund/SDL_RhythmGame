@@ -1,22 +1,19 @@
 #include "waveManager.h"
 
-//Wave waves[6] =
-//{
-//	Wave(4, 2, 8),
-//	Wave(2, 4, 8),
-//	Wave(2, 4, 16),
-//	Wave(2, 8, 25),
-//	Wave(2, 2, 2),
-//	Wave(1, 4, 16)
-//};
+using namespace Engine;
 
-
+void WaveManager::initialize(MusicManager* musicManager)
+{
+	WaveManager::musicManager = musicManager;
+}
 void WaveManager::pause()
 {
-	getMusicManager()->onQuarterNote -= &WaveManager::onQuarterNote;
+	if (musicManager != nullptr)
+		musicManager->onQuarterNote -= &WaveManager::onQuarterNote;
+
 	activated = false;
 }
-void  WaveManager::resetWaves()
+void WaveManager::resetWaves()
 {
 	for (Wave& wave : waves)
 	{
@@ -37,32 +34,29 @@ void WaveManager::restart()
 
 void WaveManager::start()
 {
-	getMusicManager()->onQuarterNote += &WaveManager::onQuarterNote;
+	musicManager->onQuarterNote += &WaveManager::onQuarterNote;
 	//activated = false; // wait until main beat to activate
 	quarterNoteCount = 0;
 }
-
 
 void WaveManager::onQuarterNote()
 {
 	if (!activated)
 	{
-		if (waitingForLevelChange && getObjectCount() <= 1)
+		if (waitingForLevelChange && Engine::getObjectCount() <= 1)
 		{
-			getMusicManager()->changeBeat();
+			musicManager->changeBeat();
 			waitingForLevelChange = false;
 			return;
 		}
-		if (getMusicData()->currentQuarterNote == 2 && !waitingForLevelChange && !MusicManager::isTransitioning)
+		if (musicManager->data->currentQuarterNote == 2 && !waitingForLevelChange && !MusicManager::isTransitioning)
 		{
 			activated = true;
-			//spawnAsteroid();
-			//waves[waveIndex].spawnCount++;
 		}
 		else return;
 	}
 	quarterNoteCount++;
-	if (waves[waveIndex].spawnCount == 0 && quarterNoteCount == 1 && getMusicData()->currentQuarterNote == 2)
+	if (waves[waveIndex].spawnCount == 0 && quarterNoteCount == 1 && musicManager->data->currentQuarterNote == 2)
 	{
 		spawnAsteroid();
 		waves[waveIndex].spawnCount++;
@@ -77,7 +71,6 @@ void WaveManager::onQuarterNote()
 		spawnAsteroid();
 		if (waves[waveIndex].spawnCount >= waves[waveIndex].totalSpawns)
 		{
-			//waves[waveIndex].spawnCount = 0;
 			quarterNoteCount = -waves[waveIndex].delayUntilNextWave + 1;
 			waveIndex++;
 			if (waveIndex > sizeof(waves) / sizeof(waves[0]) - 1)
@@ -86,11 +79,9 @@ void WaveManager::onQuarterNote()
 
 				waveIndex = 0;
 				resetWaves();
-				//getMusicManager()->changeBeat(1);
 				activated = false;
 				waitingForLevelChange = true;
 				quarterNoteCount = 0;
-				// change music
 			}
 		}
 	}
@@ -123,5 +114,5 @@ void WaveManager::spawnAsteroid()
 	Position pos(x, rand() % 150 + 50, size);
 	Rotation rot(randomTorque, randomAngle);
 	Velocity vel(xVelocity, yVelocity);
-	createObject(pos, rot, vel);
+	Engine::createObject(pos, rot, vel);
 }

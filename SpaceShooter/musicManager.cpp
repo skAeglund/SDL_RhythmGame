@@ -4,13 +4,8 @@
 #include <iomanip>
 #include <string>
 
-MusicManager* musicManager;
-int glitchChannel = 0;
-int transitionChannel = 1;
-void (SDLCALL channel_finished)(int ch);
 bool MusicManager::initialize(Beat inputBeats[NUMBER_OF_BEATS])
 {
-	//currentBeat = Beat(bpm, timeSignature);
 	bool result = true;
 	//Initialize SDL_mixer
 	if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 512) < 0)
@@ -30,9 +25,7 @@ bool MusicManager::initialize(Beat inputBeats[NUMBER_OF_BEATS])
 		}
 	}
 	currentBeat = beats[0];
-	musicManager = this;
 	data = new MusicData();
-
 	//load SFX
 	transitionSound = Mix_LoadWAV("Content/Audio/SFX_Transition.wav");
 	if (transitionSound == NULL)
@@ -49,7 +42,7 @@ bool MusicManager::initialize(Beat inputBeats[NUMBER_OF_BEATS])
 	}
 	for (int i = 0; i < 4; i++)
 	{
-		std::string path = "Content/Audio/SFX_Laser" + std::to_string(i+1) + ".wav";
+		std::string path = "Content/Audio/SFX_Laser" + std::to_string(i + 1) + ".wav";
 		laserSounds[i] = Mix_LoadWAV(path.c_str());
 	}
 
@@ -58,23 +51,12 @@ bool MusicManager::initialize(Beat inputBeats[NUMBER_OF_BEATS])
 	data->wholeNoteLength = data->quarterNoteLength * currentBeat.timeSignature;
 
 	Mix_ReserveChannels(2);
-
-	Mix_ChannelFinished(channel_finished);
 	return result;
 }
 void MusicManager::startPlaying()
 {
 	Mix_FadeInMusic(currentBeat.music, -1, (int)(data->wholeNoteLength*2000));
 	loadTime = 0.2;
-}
-
-void (SDLCALL channel_finished)(int ch)
-{
-	// this can probably be removed
-	if (ch == transitionChannel)
-	{
-		MusicManager::isTransitioning = false;
-	}
 }
 void MusicManager::stopPlaying()
 {
@@ -105,11 +87,13 @@ void MusicManager::changeBeat(int index)
 		MusicManager::isTransitioning = true;
 	}
 }
+
+
 bool MusicManager::update(double deltaTime)
 {
 	if (isLoading)
 	{
-		// Let the music play muted for a time and then sets the position to the start...
+		// Lets the music play muted for a time and then sets the position to the start...
 		// I'm unsure about the possible latency of starting music, but I assume that 
 		// changing position of a song that's already playing is faster
 		double currentTime = Mix_GetMusicPosition(currentBeat.music) * 1000;
@@ -224,16 +208,28 @@ void MusicManager::printStats()
 
 
 
-void MusicManager::destroy()
+void MusicManager::unload()
 {
+	for (size_t i = 0; i < sizeof(beats) / sizeof(beats[0]); i++)
+	{
+		Mix_FreeMusic(beats[i].music);
+	}
+	for (size_t i = 0; i < sizeof(laserSounds) / sizeof(laserSounds[0]); i++)
+	{
+		Mix_FreeChunk(laserSounds[i]);
+	}
+	Mix_FreeChunk(transitionSound);
+	Mix_FreeChunk(glitchSound);
 	delete data;
-	Mix_FreeMusic(currentBeat.music);
 	Mix_Quit();
 }
 
 void MusicManager::playLaserSound()
 {
-	int index = data->currentQuarterNote - 1;
+	// atm only the first laser sound is being played
+	// but later I will make slightly different laser sounds in rotation
+	
+	//int index = data->currentQuarterNote - 1; 
 
 	int channel = Mix_PlayChannel(-1, laserSounds[0], 0);
 	Mix_Volume(channel, 50);
@@ -245,20 +241,7 @@ void  MusicManager::playGlitchSound()
 	int volume = rand() % 20 + 75;
 	Mix_Volume(glitchChannel, volume);
 }
-MusicManager* getMusicManager()
-{
-	return musicManager;
-}
 
-MusicData* getMusicData()
-{
-	return getMusicManager()->data;
-}
-
-void setMusicManager(MusicManager* musicManagerIn)
-{
-	musicManager = musicManagerIn;
-}
 
 Beat::Beat(int bpm, int signature, const char* path)
 {

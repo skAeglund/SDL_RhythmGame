@@ -1,11 +1,10 @@
 #include "collision.h"
-
 #include <algorithm>
 #include <cmath>
 #include <map>
 
-const float PI = 3.1415;
-
+namespace Collision
+{ 
 std::map <Button, SDL_Rect> buttons
 {
 	{Button::start, SDL_Rect{430,625,420,140}},
@@ -60,11 +59,6 @@ bool circleIntersect(float x1, float y1, float r1, float x2, float y2, float r2,
 	return dist < radiusSum;
 }
 
-//bool lineCircleIntersect(Line line, Circle circle)
-//{
-//	return true;
-//}
-
 bool pointCircleIntersect(float x, float y, const Circle& circle)
 {
 	float dx = x - circle.x;
@@ -73,4 +67,6 @@ bool pointCircleIntersect(float x, float y, const Circle& circle)
 	float dist = sqrt(dx * dx + dy * dy);
 
 	return dist < circle.radius;
+}
+
 }

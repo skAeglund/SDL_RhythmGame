@@ -151,13 +151,11 @@
     <ClCompile Include="collision.cpp" />
     <ClCompile Include="crosshair.cpp" />
     <ClCompile Include="engine.cpp" />
-    <ClCompile Include="game.cpp" />
     <ClCompile Include="input.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="player.cpp" />
     <ClCompile Include="musicManager.cpp" />
     <ClCompile Include="Sprite.cpp" />
-    <ClCompile Include="spritesheet.cpp" />
     <ClCompile Include="vector2.cpp" />
     <ClCompile Include="waveManager.cpp" />
   </ItemGroup>
@@ -166,12 +164,11 @@
     <ClInclude Include="crosshair.h" />
     <ClInclude Include="delegate.h" />
     <ClInclude Include="engine.h" />
-    <ClInclude Include="game.h" />
+    <ClInclude Include="gameObject.h" />
     <ClInclude Include="input.h" />
     <ClInclude Include="musicManager.h" />
     <ClInclude Include="player.h" />
     <ClInclude Include="sprite.h" />
-    <ClInclude Include="spritesheet.h" />
     <ClInclude Include="vector2.h" />
     <ClInclude Include="waveManager.h" />
   </ItemGroup>

@@ -1,6 +1,7 @@
 #include "vector2.h"
-#define PI 3.14159265
 
+namespace Vector2D
+{
 	Vector2::Vector2(float x, float y)
 	{
 		this->x = x;
@@ -60,7 +61,7 @@
 	{
 		float dX = x2 - x1;
 		float dY = y2 - y1;
-		return Vector2(dX,dY).normalized();
+		return Vector2(dX, dY).normalized();
 	}
 	void makePerpendicularClockwise(float& x, float& y)
 	{
@@ -98,3 +99,4 @@
 	{
 		return sqrt(x * x + y * y);
 	}
+}

@@ -3,63 +3,62 @@
 #include <iostream>
 #include <stdlib.h>
 #include <vector>
-#include "sprite.h"
 #include "collision.h"
 #include "player.h"
+#include "gameObject.h"
+#include "musicManager.h"
 
-#define MIN_SIZE_WHOLENOTE 45
-#define MIN_SIZE_HALFNOTE 20
-#define MIN_SIZE_TRIPPLESPLIT 32
 #define WIDTH 1920
 #define HEIGHT 1080
-#define HEALTH_LINE_HEIGHT HEIGHT - 100
+using namespace GameObject;
 
-bool initializeEngine(int* currentHealth);
-void quit();
-SDL_Renderer* getRenderer();
+/// <summary>
+/// This manages all objects of the game including movment,
+/// collision/depenetration and rendering
+/// A future improvement would be to move out game-specific stuff
+/// like "laser" to a more fitting location
+/// </summary>
+namespace Engine
+{
+	bool initializeEngine(const char* textures[], int size);
+	void quit();
 
-void drawCircles(float x, float y, float radius);
-void drawBeatCircles();
-void drawLines(SDL_Color color);
-void drawHealthLine();
-void drawObjects();
-void drawColliders();
-void sortObjects();
-void moveObjects();
-void rotateObjects();
-void updatePlayerVelocity(float x, float y);
-int getObjectCount();
+	// ----------- Rendering----------------
+	SDL_Renderer* getRenderer();
+	void drawObjects();
+	void drawCircles(float x, float y, float radius);
+	void drawBeatCircles(MusicData* musicData);
+	void drawLasers(SDL_Color color);
+	void drawHealthLine(MusicData* musicData);
+	void drawColliders();
+	void drawBackground();
+	void renderPresent();
+	void renderClear();
+	void unloadTextures();
 
-void renderPresent();
-void renderClear();
-
-float updateTicks();
-void delayNextFrame();
-void printTimeStats();
-
-bool getKeyDown(int index);
-void updateKey(int index, bool value);
-void resetKeys();
-
-struct Position { float x; float y; float radius = 50; };
-struct Velocity { float xVelocity; float yVelocity; };
-struct Rotation { float force; float angle; };
-struct Appearance { SDL_Texture* texture; float scaleOffset = 0; SDL_Color tint = SDL_Color(255, 255, 255, 0); };
-
-struct ObjectPendingDeletion { Position position; Appearance appearance; float elapsedFadeOutTime; float angle; };
-
-enum class Tag { Asteroid, Unsplittable, Player, none };
-
-
-struct Line { float x1; float y1; float x2; float y2; float elapsedTime = 0.f; SDL_Color color = SDL_Color(0, 255, 255, 255); };
-
-Position getPlayerPosition();
-void createObject(Position pos, Rotation rot, Velocity vel, float scaleOffset = 0, SDL_Texture* texture = nullptr, Tag tag = Tag::Asteroid);
-void createObject(Position position, Rotation rotation, Velocity velocity, float scaleOffset, const char* texturePath, Tag tag = Tag::Asteroid);
-void removeObject(int index);
-void addLine(Line line);
-
-struct Color { int r; int g; int b; };
-
+	// ---------- Object handling------------
+	void createObject(Position pos, Rotation rot, Velocity vel, float scaleOffset = 0, SDL_Texture* texture = nullptr, Tag tag = Tag::Asteroid);
+	void createObject(Position position, Rotation rotation, Velocity velocity, float scaleOffset, const char* texturePath, Tag tag = Tag::Asteroid);
+	void removeObject(int index);
+	void clearObjects();
+	void addLaser(Laser line, MusicData* musicData);
+	void sortObjects();
+	void moveObjects();
+	void rotateObjects();
+	int checkForObjectDestruction(MusicManager& musicManager);
+	void updatePlayerVelocity(float x, float y);
+	int getObjectCount();
+	Position getPlayerPos();
+	
+	// ----------- Time related ------------ 
+	float updateTicks();
+	void delayNextFrame();
+	void printTimeStats();
+	
+	// ----------- Key related ------------- 
+	bool getKeyDown(int index);
+	void updateKey(int index, bool value);
+	void resetKeys();
+}
 
 

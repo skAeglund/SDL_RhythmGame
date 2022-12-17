@@ -1,6 +1,11 @@
 #pragma once
 #include <SDL_image.h>
 
+/// <summary>
+/// This is mainly used for single immovable things like screen overlays
+/// that last for a limited amount of time
+/// Texture rendering for all movable objects is done in engine.cpp
+/// </summary>
 struct Sprite
 {
 	int width, height;

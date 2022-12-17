@@ -2,7 +2,7 @@
 #include "musicManager.h"
 
 
-void handleInputEvents(Player& player, bool& gameRunning, bool& gamePaused, float deltaTime)
+void handleInputEvents(Player& player, MusicManager& musicManager, bool& gameRunning, bool& gamePaused, float deltaTime)
 {
 	SDL_Event event;
 	while (SDL_PollEvent(&event))
@@ -14,13 +14,13 @@ void handleInputEvents(Player& player, bool& gameRunning, bool& gamePaused, floa
 		{
 			if (event.button.button == InputKey::shoot)
 			{
-				player.shoot(event.button.x, event.button.y);
-				
+				// shoot ability inactivated for now
+				//player.shoot(event.button.x, event.button.y); 
 			}
 			else if (event.button.button == InputKey::laser)
 			{
-				player.laser(event.button.x, event.button.y);
-				getMusicManager()->playLaserSound();
+				player.shootLaser(event.button.x, event.button.y, musicManager.data);
+				musicManager.playLaserSound();
 			}
 			break;
 		}
@@ -33,21 +33,21 @@ void handleInputEvents(Player& player, bool& gameRunning, bool& gamePaused, floa
 			}
 			else if (scanCode == InputKey::spawnAsteroid)
 			{
-				//if (deltaTime < 0.05f)
-				//	spawnAsteroids(5);
+				// spawn asteroid for debugging - inactivated
+				// spawnAsteroids(5);
 			}
 			else if (scanCode == InputKey::changeBeat)
 			{
-				getMusicManager()->changeBeat();
+				musicManager.changeBeat();
 			}
 
-			updateKey(scanCode, true);
+			Engine::updateKey(scanCode, true);
 			break;
 		}
 
 		case SDL_KEYUP:
 		{
-			updateKey(scanCode, false);
+			Engine::updateKey(scanCode, false);
 			break;
 		}
 		case SDL_QUIT:

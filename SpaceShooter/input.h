@@ -2,7 +2,9 @@
 #include "engine.h"
 #include "player.h"
 
-void handleInputEvents(Player& player, bool& gameRunning, bool& gamePaused, float deltaTime);
+using namespace Collision;
+
+void handleInputEvents(Player& player, MusicManager& musicManager, bool& gameRunning, bool& gamePaused, float deltaTime);
 Button pausedInputHandler();
 
 enum InputKey {

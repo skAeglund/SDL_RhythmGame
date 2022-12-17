@@ -8,127 +8,145 @@
 #include "crosshair.h"
 #include "input.h"
 #include "musicManager.h"
-#include "game.h"
 #include "waveManager.h"
-using namespace std;
 
-bool pauseLoop(Button& buttonPressed, Sprite& background, Crosshair& crosshair, const char* path);
+using namespace std;
+using namespace Engine;
+using namespace Collision;
+
+bool pauseLoop(Button& buttonPressed, MusicManager& musicManager, Crosshair& crosshair, const char* path);
 float spawnTimer = 0.f;
 int main(int argc, char** args) {
 
-	Player player{ };
-	initializeEngine(0);
-	bool gameRunning = true;
-
-	Position playerPosition(Position(WIDTH / 2 - player.radius / 2, HEIGHT * 0.8f, 45));
-	createObject(playerPosition, Rotation(10,0), Velocity(0, 0),  20, "Content/Sprites/player90x90.png", Tag::Player);
-	Crosshair crosshair(25, 25, "Content/Sprites/crosshair.png", getRenderer());
-	Sprite background(WIDTH, HEIGHT);
-	background.load("Content/Sprites/background.png", getRenderer());
-	SDL_SetTextureBlendMode(background.texture, SDL_BlendMode::SDL_BLENDMODE_BLEND);
-
+	const char* textures[] = {
+		"Content/Sprites/background.png",
+		"Content/Sprites/meteor1_blue.png",
+		"Content/Sprites/meteor2.png",
+		"Content/Sprites/meteor3.png",
+		"Content/Sprites/meteor4.png"
+	};
 	Beat beats[NUMBER_OF_BEATS] = {
-		/*Beat(114,4, "Content/Audio/Intro_Loop.wav"),*/
 		Beat(114, 4,  "Content/Audio/Sunset_Loop_16.wav"),
 		Beat(120, 4, "Content/Audio/Jupiter_Loop.wav"),
 		Beat(133, 4, "Content/Audio/RunningInTheNight_Loop.wav")
 	};
-	MusicManager musicManager;
 
-	musicManager.initialize(beats);
-	Button buttonPressed = Button::none;
+	Engine::initializeEngine(textures, sizeof(textures) / sizeof(textures[0]));
 	
-	//std::cout << "current path: " << filesystem::current_path();
+	Player player{ };
+	Position playerPosition(Position(WIDTH / 2 - player.radius / 2, HEIGHT * 0.8f, 45));
+	Engine::createObject(playerPosition, Rotation(10,0), Velocity(0, 0),  20, "Content/Sprites/player90x90.png", Tag::Player);
+	
+	Crosshair crosshair(25, 25, "Content/Sprites/crosshair.png", Engine::getRenderer());
+
+	MusicManager musicManager;
+	musicManager.initialize(beats);
 
 	WaveManager waveManager;
-	
-	gameRunning = pauseLoop(buttonPressed, background, crosshair, "Content/Sprites/IntroScreen_Temp.png");
+	waveManager.initialize(&musicManager);
+
+	Button buttonPressed = Button::none;
+	bool gameRunning = pauseLoop(buttonPressed, musicManager, crosshair, "Content/Sprites/IntroScreen_Temp.png");
 	bool gamePaused = false;
+
 	musicManager.startPlaying();
 	waveManager.start();
-	//spawnAsteroids(1);
+
 	while (gameRunning)
 	{
-		double deltaTime = updateTicks();
-		bool musicPlaying = musicManager.update(deltaTime);
-		printTimeStats();
+		double deltaTime = Engine::updateTicks();
+		Engine::printTimeStats();
+
+		musicManager.update(deltaTime);
 		musicManager.printStats();
 
-		renderClear();
-		background.draw(0, 0, WIDTH, HEIGHT, getRenderer());
-		drawLines(SDL_Color(0, 200, 255, 255));
-		sortObjects();
-		moveObjects();
-		rotateObjects();
-		drawObjects();
-		drawHealthLine();
+		Engine::renderClear();
+		Engine::drawBackground();
+		Engine::drawLasers(SDL_Color(0, 200, 255, 255));
+		Engine::sortObjects();
+		Engine::moveObjects();
+		Engine::rotateObjects();
+		Engine::drawObjects();
+		Engine::drawHealthLine(musicManager.data);
+		Engine::drawBeatCircles(musicManager.data);
 
-		drawBeatCircles();
-		//drawColliders();
+		int playerDamage = Engine::checkForObjectDestruction(musicManager);
+
+		if (playerDamage > 0)
+		{
+			player.remainingHealth -= playerDamage;
+			if (player.remainingHealth <= 0)
+			{
+				musicManager.stopPlaying();
+				Engine::clearObjects();
+			}
+			musicManager.playGlitchSound();
+		}
+		
+		//drawColliders(); // use this to show colliders in game
 		
 		player.update(deltaTime);
-		//player.draw();
 		crosshair.update();
-		crosshair.draw(getRenderer());
+		crosshair.draw(Engine::getRenderer());
 
-		handleInputEvents(player, gameRunning, gamePaused, deltaTime);
-		renderPresent();
+		handleInputEvents(player, musicManager, gameRunning, gamePaused, deltaTime);
 		if (gamePaused)
 		{
 			waveManager.pause();
-			gameRunning = pauseLoop(buttonPressed, background, crosshair, "Content/Sprites/PauseScreen_temp.png");
+			gameRunning = pauseLoop(buttonPressed, musicManager, crosshair, "Content/Sprites/PauseScreen_temp.png");
 			gamePaused = false;
 			if (gameRunning)
 			{
 				waveManager.start();
 			}
 		}
-		else if (Player::remainingHealth <= 0)
+		else if (player.remainingHealth <= 0)
 		{
 			waveManager.pause();
-			gameRunning = pauseLoop(buttonPressed, background, crosshair, "Content/Sprites/GameOver_Temp.png");
+			gameRunning = pauseLoop(buttonPressed, musicManager, crosshair, "Content/Sprites/GameOver_Temp.png");
 			if (gameRunning)
 			{
-				Player::remainingHealth = player.maxHealth;
+				player.remainingHealth = player.maxHealth;
 				musicManager.changeBeat(0);
 				waveManager.restart();
-				//waveManager.start();
 			}
-			resetKeys();
+			Engine::resetKeys();
 		}
-		delayNextFrame();
+
+		Engine::renderPresent();
+		Engine::delayNextFrame();
 	}
 
-	musicManager.destroy();
-	background.destroy();
+	musicManager.unload();
 	crosshair.destroy();
 	cout << "Quitting ..." << endl;
-	quit();
+	Engine::quit();
 
 	return 0;
 }
-bool pauseLoop(Button& buttonPressed, Sprite& background, Crosshair& crosshair, const char* path)
+bool pauseLoop(Button& buttonPressed, MusicManager& musicManager, Crosshair& crosshair, const char* path)
 {
 	Sprite overlay(WIDTH, HEIGHT);
-	overlay.load(path, getRenderer());
+	overlay.load(path, Engine::getRenderer());
 	buttonPressed = Button::none;
 	while (buttonPressed == Button::none)
 	{
 		buttonPressed = pausedInputHandler();
-		renderClear();
-		float deltaTime = updateTicks();
-
-		background.draw(0, 0, WIDTH, HEIGHT, getRenderer());
-		getMusicManager()->update(deltaTime);
-		drawObjects();
-		rotateObjects();
-		drawHealthLine();
-		overlay.draw(0, 0, WIDTH, HEIGHT, getRenderer());
+		Engine::renderClear();
+		float deltaTime = Engine::updateTicks();
+		
+		Engine::drawBackground();
+		musicManager.update(deltaTime);
+		Engine::drawObjects();
+		Engine::rotateObjects();
+		Engine::drawHealthLine(musicManager.data);
+		overlay.draw(0, 0, WIDTH, HEIGHT, Engine::getRenderer());
 		crosshair.update();
-		crosshair.draw(getRenderer());
-		renderPresent();
+		crosshair.draw(Engine::getRenderer());
+		Engine::renderPresent();
 		SDL_Delay(16);
 	}
 	overlay.destroy();
 	return buttonPressed != Button::quit;
+
 }

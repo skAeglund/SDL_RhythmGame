@@ -4,6 +4,7 @@
 #include "musicManager.h"
 #define WAVECOUNT 6
 
+
 struct Wave
 {
 	int quarterNoteInterval; // how many quarternotes between spawns
@@ -12,6 +13,14 @@ struct Wave
 	int spawnCount;
 	bool bigRockHasBeenSpawned;
 };
+/// <summary>
+/// This handles the spawning of asteroids, in synch with music.
+/// 
+/// Everything being static is a temporary solution to make the function
+/// "onQuarterNote()" work with a custom delegate (see musicManager.h onQuarterNote).
+/// 
+/// I will try to find a better solution when I've got time.
+/// </summary>
 struct WaveManager
 {
 private:
@@ -28,11 +37,13 @@ private:
 		Wave(2, 2, 2),
 		Wave(1, 4, 16)
 	};
+	inline static MusicManager* musicManager;
 
 public:
-	void start();
-	void pause();
-	void restart();
+	static void initialize(MusicManager* musicManager);
+	static void start();
+	static void pause();
+	static void restart();
 
 private:
 	static void spawnAsteroid();

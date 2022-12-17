@@ -30,9 +30,6 @@
     <ClCompile Include="collision.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="spritesheet.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Sprite.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -43,9 +40,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="musicManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="game.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="waveManager.cpp">
@@ -65,9 +59,6 @@
     <ClInclude Include="collision.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="spritesheet.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="sprite.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -80,13 +71,13 @@
     <ClInclude Include="musicManager.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="game.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="delegate.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="waveManager.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gameObject.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,18 +1,20 @@
 #pragma once
 #include <SDL.h>
 #include <SDL_mixer.h>
-#define NUMBER_OF_BEATS 3
 #include "delegate.h"
+#define NUMBER_OF_BEATS 3
 
 struct Beat
 {
 	int BPM = 114;
-	int timeSignature = 4; // 4/4 - lower signature assumed to be 4
+	int timeSignature = 4; // beats per bar
 	const char* path;
 	Mix_Music* music;
 
-	Beat(int bpm=120, int signature=4, const char* path ="asd");
+	Beat(int bpm=120, int signature=4, const char* path ="");
 };
+
+// contains data used for rhythm game features
 struct MusicData
 {
 	bool wholeNoteActive = false;
@@ -23,6 +25,7 @@ struct MusicData
 	double timeSinceLastHalfNote = 0;
 	double timeSinceLastQuarterNote = 0;
 
+	// start of note = 0, end of note = 1
 	float halfNoteProgress;
 	float wholeNoteProgress;
 	float quarterNoteProgress;
@@ -33,58 +36,43 @@ struct MusicData
 
 	int currentQuarterNote = 1;
 
-	// start = 1, middle = 0, end = 1 (over 1 beat)
+	// a multiplier that's synched with halfnotes
+	// start = 1, middle = 0, end = 1
 	float pulseMultiplier;
 };
 
-
+// handles all audio / music 
 struct MusicManager
 {
-	Beat currentBeat;
-	MusicData* data;
-	Beat beats[NUMBER_OF_BEATS]; //todo: make dynamic
-
-	Mix_Chunk* transitionSound;
-	Mix_Chunk* laserSounds[4];
-	Mix_Chunk* glitchSound;
-
-	int currentBeatIndex = 0;
+	MusicData* data = nullptr;
+	inline static bool isTransitioning = false;
 	
+private:
+	Beat currentBeat{};
+	Beat beats[NUMBER_OF_BEATS]{};
+	Mix_Chunk* transitionSound = nullptr;
+	Mix_Chunk* laserSounds[4] = { nullptr };
+	Mix_Chunk* glitchSound = nullptr;
+	int currentBeatIndex = 0;
 	double acceptedOffset = 0.1;
-
-	Delegate<std::function<void()>> onQuarterNote;
-
-	double loadTime;
+	double loadTime = 0.2;
 	bool isLoading = true;
 	bool isChangingBeat = false;
+	int glitchChannel = 0;
+	int transitionChannel = 1;
 
-	inline static bool isTransitioning;
+public:
+	Delegate<std::function<void()>> onQuarterNote;
 
-	bool initialize(Beat beats[]);
+	bool initialize(Beat inputBeats[NUMBER_OF_BEATS]);
 	bool update(double deltaTime);
 	void startPlaying();
 	void stopPlaying();
 	void changeBeat(int index = -1);
-	double wholeNoteLength() { return (quarterNoteLength() * currentBeat.timeSignature); };
-	double halfNoteLength() { return quarterNoteLength() * 2; };
-	double quarterNoteLength() { return (60 / (double)currentBeat.BPM); };
-	float wholeNoteProgress() { return (data->timeSinceLastWholeNote / wholeNoteLength()); };
-	float halfNoteProgress() { return (data->timeSinceLastHalfNote / halfNoteLength()); };
-	float quarterNoteProgress() { return (data->timeSinceLastQuarterNote / quarterNoteLength()); };
-
 
 	void playLaserSound();
 	void playGlitchSound();
+
 	void printStats();
-	
-
-	void destroy();
+	void unload();
 };
-
-MusicManager* getMusicManager();
-
-MusicData* getMusicData();
-void setMusicManager(MusicManager* musicManager);
-
-
-

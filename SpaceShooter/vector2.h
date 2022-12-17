@@ -1,50 +1,52 @@
 #pragma once
 #include <iostream>
+#define PI 3.14159265
 
+namespace Vector2D
+{
+	struct Vector2 {
+		float x;
+		float y;
+		Vector2(float x = 0.f, float y = 0.f);
+		float length();
+		void clamp(float min, float max);
+		void normalize();
+		Vector2 normalized();
+		Vector2 perpendicularVectorClockwise();
+		Vector2 perpendicularVectorCounterClockwise();
 
+		Vector2& operator*=(float rhs)
+		{
+			this->x *= rhs;
+			this->y *= rhs;
+			return *this;
+		}
+		Vector2& operator-=(const Vector2& rhs)
+		{
+			this->x -= rhs.x;
+			this->y -= rhs.y;
+			return *this;
+		}
+		Vector2& operator+=(const Vector2& rhs)
+		{
+			this->x += rhs.x;
+			this->y += rhs.y;
+			return *this;
+		}
+		Vector2 operator*(const float& rhs) const
+		{
+			return Vector2(x * rhs, y * rhs);
+		}
+		Vector2 operator-(const Vector2& rhs) const
+		{
+			return Vector2(x - rhs.x, y - rhs.y);
+		}
+		Vector2 operator+(const Vector2& rhs) const
+		{
+			return Vector2(x + rhs.x, y + rhs.y);
+		}
+	};
 
-struct Vector2 {
-	float x;
-	float y;
-	Vector2(float x = 0.f, float y = 0.f);
-	float length();
-	void clamp(float min, float max);
-	void normalize();
-	Vector2 normalized();
-	Vector2 perpendicularVectorClockwise();
-	Vector2 perpendicularVectorCounterClockwise();
-
-	Vector2& operator*=(float rhs)
-	{
-		this->x *= rhs;
-		this->y *= rhs;
-		return *this;
-	}
-	Vector2& operator-=(const Vector2& rhs)
-	{
-		this->x -= rhs.x;
-		this->y -= rhs.y;
-		return *this;
-	}
-	Vector2& operator+=(const Vector2& rhs)
-	{
-		this->x += rhs.x;
-		this->y += rhs.y;
-		return *this;
-	}
-	Vector2 operator*(const float& rhs) const
-	{
-		return Vector2(x * rhs, y * rhs);
-	}
-	Vector2 operator-(const Vector2& rhs) const
-	{
-		return Vector2(x - rhs.x, y - rhs.y);
-	}
-	Vector2 operator+(const Vector2& rhs) const
-	{
-		return Vector2(x + rhs.x, y + rhs.y);
-	}
-};
 
 	float magnitude(float x, float y);
 
@@ -57,6 +59,7 @@ struct Vector2 {
 	void rotateVector(float& x, float& y, const float angle);
 
 	void makePerpendicularClockwise(float& x, float& y);
-	
+
 	void normalize(float& x, float& y);
+}
 
