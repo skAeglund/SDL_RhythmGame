@@ -1,6 +1,4 @@
 #pragma once
-#include "engine.h"
-#include "player.h"
 #include "musicManager.h"
 #define WAVECOUNT 6
 
@@ -16,10 +14,11 @@ struct Wave
 /// <summary>
 /// This handles the spawning of asteroids, in synch with music.
 /// 
-/// Everything being static is a temporary solution to make the function
+/// Everything being static is a workaround to make the function
 /// "onQuarterNote()" work with a custom delegate (see musicManager.h onQuarterNote).
 /// 
-/// I will try to find a better solution when I've got time.
+/// I will try to make the delegate work with non-static methods (if it's possible)
+///	I had planned to make use of the quarternote delegate in more places, but not in this condition
 /// </summary>
 struct WaveManager
 {

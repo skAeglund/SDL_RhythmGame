@@ -13,8 +13,11 @@ struct Sprite
 	SDL_Texture* texture;
 	const char* path;
 
-	void load(const char* path, SDL_Renderer* render, bool randomizeTint = true);
+	int spriteWidth, spriteHeight;
+
+	void load(const char* path, SDL_Renderer* render);
 	void draw(int x, int y, int width, int height, SDL_Renderer* render);
 	void drawRotated(int x, int y, int width, int height, float angle, SDL_Renderer* render);
+	void updateOpacity(float progress);
 	void destroy();
 };

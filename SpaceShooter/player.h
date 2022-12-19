@@ -22,7 +22,7 @@ struct Player
 	Player();
 	void update(float deltaTime);
 	void shootBall(int mouseX, int mouseY);
-	void shootLaser(int mouseX, int mouseY, MusicData* musicData);
+	void shootLaser(int mouseX, int mouseY, MusicData* musicData, bool& wasShotSuccessful);
 	void reset();
 };
 

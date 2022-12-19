@@ -8,8 +8,8 @@ struct Beat
 {
 	int BPM = 114;
 	int timeSignature = 4; // beats per bar
-	const char* path;
-	Mix_Music* music;
+	const char* path = "";
+	Mix_Music* music = nullptr;
 
 	Beat(int bpm=120, int signature=4, const char* path ="");
 };
@@ -21,24 +21,24 @@ struct MusicData
 	bool halfNoteActive = false;
 	bool quarterNoteActive = false;
 
-	double timeSinceLastWholeNote = 0;
-	double timeSinceLastHalfNote = 0;
-	double timeSinceLastQuarterNote = 0;
+	float timeSinceLastWholeNote{};
+	float timeSinceLastHalfNote{};
+	float timeSinceLastQuarterNote{};
 
 	// start of note = 0, end of note = 1
-	float halfNoteProgress;
-	float wholeNoteProgress;
-	float quarterNoteProgress;
+	float halfNoteProgress{};
+	float wholeNoteProgress{};
+	float quarterNoteProgress{};
 
-	double wholeNoteLength;
-	double halfNoteLength;
-	double quarterNoteLength;
+	float wholeNoteLength{};
+	float halfNoteLength{};
+	float quarterNoteLength{};
 
 	int currentQuarterNote = 1;
 
 	// a multiplier that's synched with halfnotes
 	// start = 1, middle = 0, end = 1
-	float pulseMultiplier;
+	float pulseMultiplier{};
 };
 
 // handles all audio / music 
@@ -52,10 +52,12 @@ private:
 	Beat beats[NUMBER_OF_BEATS]{};
 	Mix_Chunk* transitionSound = nullptr;
 	Mix_Chunk* laserSounds[4] = { nullptr };
+	Mix_Chunk* badLaserSound = nullptr;
 	Mix_Chunk* glitchSound = nullptr;
+	
 	int currentBeatIndex = 0;
-	double acceptedOffset = 0.1;
-	double loadTime = 0.2;
+	float acceptedOffset = 0.1f;
+	float loadTime = 0.2f;
 	bool isLoading = true;
 	bool isChangingBeat = false;
 	int glitchChannel = 0;
@@ -65,12 +67,12 @@ public:
 	Delegate<std::function<void()>> onQuarterNote;
 
 	bool initialize(Beat inputBeats[NUMBER_OF_BEATS]);
-	bool update(double deltaTime);
+	bool update(float deltaTime);
 	void startPlaying();
 	void stopPlaying();
 	void changeBeat(int index = -1);
 
-	void playLaserSound();
+	void playLaserSound(bool successfulLaser);
 	void playGlitchSound();
 
 	void printStats();

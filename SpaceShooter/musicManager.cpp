@@ -18,7 +18,7 @@ bool MusicManager::initialize(Beat inputBeats[NUMBER_OF_BEATS])
 	{
 		beats[i] = inputBeats[i];
 		beats[i].music = Mix_LoadMUS(inputBeats[i].path);
-		if (beats[i].music == NULL)
+		if (beats[i].music == nullptr)
 		{
 			printf("Failed to load music! SDL_mixer Error: %s\n", Mix_GetError());
 			result = false;
@@ -28,16 +28,16 @@ bool MusicManager::initialize(Beat inputBeats[NUMBER_OF_BEATS])
 	data = new MusicData();
 	//load SFX
 	transitionSound = Mix_LoadWAV("Content/Audio/SFX_Transition.wav");
-	if (transitionSound == NULL)
+	if (transitionSound == nullptr)
 	{
-		printf("Failed to load scratch sound effect! SDL_mixer Error: %s\n", Mix_GetError());
+		printf("Failed to load sound effect! SDL_mixer Error: %s\n", Mix_GetError());
 		result = false;
 	}
 	//load SFX
 	glitchSound = Mix_LoadWAV("Content/Audio/SFX_CollisionGlitch.wav");
-	if (glitchSound == NULL)
+	if (glitchSound == nullptr)
 	{
-		printf("Failed to load scratch sound effect! SDL_mixer Error: %s\n", Mix_GetError());
+		printf("Failed to load sound effect! SDL_mixer Error: %s\n", Mix_GetError());
 		result = false;
 	}
 	for (int i = 0; i < 4; i++)
@@ -45,7 +45,12 @@ bool MusicManager::initialize(Beat inputBeats[NUMBER_OF_BEATS])
 		std::string path = "Content/Audio/SFX_Laser" + std::to_string(i + 1) + ".wav";
 		laserSounds[i] = Mix_LoadWAV(path.c_str());
 	}
-
+	badLaserSound = Mix_LoadWAV("Content/Audio/SFX_BadLaser.wav");
+	if (badLaserSound == nullptr)
+	{
+		printf("Failed to load sound effect! SDL_mixer Error: %s\n", Mix_GetError());
+		result = false;
+	}
 	data->quarterNoteLength = 60 / (double)currentBeat.BPM;
 	data->halfNoteLength = data->quarterNoteLength * 2;
 	data->wholeNoteLength = data->quarterNoteLength * currentBeat.timeSignature;
@@ -84,12 +89,12 @@ void MusicManager::changeBeat(int index)
 		Mix_PlayChannel(transitionChannel, transitionSound, 0);
 		
 		Mix_Volume(transitionChannel, transitionVolume);
-		MusicManager::isTransitioning = true;
+		isTransitioning = true;
 	}
 }
 
 
-bool MusicManager::update(double deltaTime)
+bool MusicManager::update(float deltaTime)
 {
 	if (isLoading)
 	{
@@ -143,25 +148,25 @@ bool MusicManager::update(double deltaTime)
 		}
 	}
 	data->wholeNoteActive =
-		data->timeSinceLastWholeNote < acceptedOffset * 1.25 ||
-		data->timeSinceLastWholeNote > data->wholeNoteLength - acceptedOffset * 0.75;
+		data->timeSinceLastWholeNote < acceptedOffset * 1.25f ||
+		data->timeSinceLastWholeNote > data->wholeNoteLength - acceptedOffset * 0.75f;
 
 	data->quarterNoteActive =
-		data->timeSinceLastQuarterNote < acceptedOffset * 1.25 ||
-		data->timeSinceLastQuarterNote > data->quarterNoteLength - acceptedOffset * 0.75;
+		data->timeSinceLastQuarterNote < acceptedOffset * 1.25f ||
+		data->timeSinceLastQuarterNote > data->quarterNoteLength - acceptedOffset * 0.75f;
 
 	data->halfNoteActive =
-		data->timeSinceLastHalfNote < acceptedOffset * 1.25 ||
-		data->timeSinceLastHalfNote > data->halfNoteLength - acceptedOffset * 0.75;
+		data->timeSinceLastHalfNote < acceptedOffset * 1.25f ||
+		data->timeSinceLastHalfNote > data->halfNoteLength - acceptedOffset * 0.75f;
 
 	data->quarterNoteProgress = data->timeSinceLastQuarterNote / data->quarterNoteLength;
 	data->wholeNoteProgress = data->timeSinceLastWholeNote / data->wholeNoteLength;
 	data->halfNoteProgress = data->timeSinceLastHalfNote / data->halfNoteLength;
 
 	if (data->halfNoteProgress < 0.5f)
-		data->pulseMultiplier = data->halfNoteProgress * 2;
+		data->pulseMultiplier = data->halfNoteProgress * 2.f;
 	else
-		data->pulseMultiplier = 1 - (data->halfNoteProgress - 0.5f) * 2;
+		data->pulseMultiplier = 1 - (data->halfNoteProgress - 0.5f) * 2.f;
 
 	return true;
 }
@@ -210,29 +215,34 @@ void MusicManager::printStats()
 
 void MusicManager::unload()
 {
-	for (size_t i = 0; i < sizeof(beats) / sizeof(beats[0]); i++)
+	for (size_t i = 0; i < std::size(beats); i++)
 	{
-		Mix_FreeMusic(beats[i].music);
+		if (beats[i].music != nullptr)
+			Mix_FreeMusic(beats[i].music);
 	}
-	for (size_t i = 0; i < sizeof(laserSounds) / sizeof(laserSounds[0]); i++)
+	for (size_t i = 0; i < std::size(laserSounds); i++)
 	{
-		Mix_FreeChunk(laserSounds[i]);
+		if (laserSounds[i] != nullptr)
+			Mix_FreeChunk(laserSounds[i]);
 	}
-	Mix_FreeChunk(transitionSound);
-	Mix_FreeChunk(glitchSound);
+	if (transitionSound != nullptr)
+		Mix_FreeChunk(transitionSound);
+
+	if (transitionSound != nullptr)
+Mix_FreeChunk(glitchSound);
 	delete data;
 	Mix_Quit();
 }
 
-void MusicManager::playLaserSound()
+void MusicManager::playLaserSound(bool successfulLaser)
 {
 	// atm only the first laser sound is being played
 	// but later I will make slightly different laser sounds in rotation
 	
 	//int index = data->currentQuarterNote - 1; 
 
-	int channel = Mix_PlayChannel(-1, laserSounds[0], 0);
-	Mix_Volume(channel, 50);
+	int channel = Mix_PlayChannel(-1, successfulLaser ? laserSounds[0] : badLaserSound, 0);
+	Mix_Volume(channel, successfulLaser ? 50 : MIX_MAX_VOLUME);
 }
 
 void  MusicManager::playGlitchSound()

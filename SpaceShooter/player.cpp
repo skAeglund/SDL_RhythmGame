@@ -49,7 +49,8 @@ void Player::shootBall(int mouseX, int mouseY)
 	Position pos{ centerPosition.x , centerPosition.y , 20.f};
 	Engine::createObject(pos, Rotation(0,0), projectileVelocity, 10.f/*, forceBallTexture*/);
 }
-void Player::shootLaser(int mouseX, int mouseY, MusicData* musicData)
+
+void Player::shootLaser(int mouseX, int mouseY, MusicData* musicData, bool& wasShotSuccessful)
 {
 	Vector2 mousePosition{ (float)mouseX, (float)mouseY };
 	Position playerPos = Engine::getPlayerPos();
@@ -58,7 +59,7 @@ void Player::shootLaser(int mouseX, int mouseY, MusicData* musicData)
 	direction.normalize();
 	centerPos = centerPos + direction * (radius);
 	playerPos = Position(centerPos.x, centerPos.y);
-	Engine::addLaser(Laser(playerPos.x, playerPos.y, (float)mouseX, (float)mouseY), musicData);
+	wasShotSuccessful = Engine::addLaser(Laser(playerPos.x, playerPos.y, (float)mouseX, (float)mouseY), musicData);
 }
 
 void Player::reset()

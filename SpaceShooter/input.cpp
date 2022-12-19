@@ -19,8 +19,9 @@ void handleInputEvents(Player& player, MusicManager& musicManager, bool& gameRun
 			}
 			else if (event.button.button == InputKey::laser)
 			{
-				player.shootLaser(event.button.x, event.button.y, musicManager.data);
-				musicManager.playLaserSound();
+				bool successfulShot = false;
+				player.shootLaser(event.button.x, event.button.y, musicManager.data, successfulShot);
+				musicManager.playLaserSound(successfulShot);
 			}
 			break;
 		}
@@ -59,7 +60,7 @@ void handleInputEvents(Player& player, MusicManager& musicManager, bool& gameRun
 	}
 }
 
-Button pausedInputHandler()
+Button handlePausedInput()
 {
 	Button buttonPressed = Button::none;
 	SDL_Event event;
@@ -76,7 +77,19 @@ Button pausedInputHandler()
 			int mouse_x, mouse_y;
 			SDL_GetMouseState(&mouse_x, &mouse_y);
 			buttonPressed = checkButtonAtPoint(mouse_x, mouse_y);
+			//buttonPressed = buttons.isIntersectingAnyButton(mouse_x, mouse_y);
 		}
 	}
 	return buttonPressed;
+}
+
+bool isPressingMouseButton()
+{
+	SDL_Event event;
+	while (SDL_PollEvent(&event))
+	{
+		if (event.type == SDL_MOUSEBUTTONDOWN)
+			return true;
+	}
+	return false;
 }

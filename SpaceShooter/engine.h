@@ -41,7 +41,7 @@ namespace Engine
 	void createObject(Position position, Rotation rotation, Velocity velocity, float scaleOffset, const char* texturePath, Tag tag = Tag::Asteroid);
 	void removeObject(int index);
 	void clearObjects();
-	void addLaser(Laser line, MusicData* musicData);
+	bool addLaser(Laser line, MusicData* musicData);
 	void sortObjects();
 	void moveObjects();
 	void rotateObjects();
