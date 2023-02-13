@@ -1,72 +1,38 @@
 #include "collision.h"
-#include <algorithm>
 #include <cmath>
-#include <map>
+
+#include "gameObject.h"
+
 
 namespace Collision
-{ 
-std::map <Button, SDL_Rect> buttons
 {
-	{Button::start, SDL_Rect{430,625,420,140}},
-	{Button::quit, SDL_Rect{1028,625,420,140}}
-};
-
-Button checkButtonAtPoint(int x, int y)
-{
-	SDL_Point point{ x,y };
-	for (auto& button : buttons)
+	bool circleIntersect(Circle a, Circle b, float& depenetrateX, float& depenetrateY)
 	{
-		if (SDL_PointInRect(&point, &button.second))
+		const float dx = b.x - a.x;
+		const float dy = b.y - a.y;
+
+		const float dist = sqrt(dx * dx + dy * dy);
+
+		const float radiusSum = a.radius + b.radius;
+		if (dist < radiusSum)
 		{
-			return button.first;
+			depenetrateX = dx;
+			depenetrateY = dy;
+			normalize(depenetrateX, depenetrateY);
+			depenetrateX *= radiusSum - dist;
+			depenetrateY *= radiusSum - dist;
 		}
+		return dist < radiusSum;
 	}
-	return Button::none;
-}
 
-bool circleIntersect(float x1, float y1, float r1, float x2, float y2, float r2, Vector2& depenetrationVector)
-{
-	float dx = x2 - x1;
-	float dy = y2 - y1;
-
-	float dist = sqrt(dx * dx + dy * dy);
-
-	float radiusSum = r1 + r2;
-	if (dist < radiusSum)
+	bool pointCircleIntersect(float x, float y, const Circle& circle)
 	{
-		depenetrationVector = Vector2(dx, dy);
-		depenetrationVector.normalize();
-		depenetrationVector *= radiusSum - dist;
+		const float dx = x - circle.x;
+		const float dy = y - circle.y;
+
+		const float dist = sqrt(dx * dx + dy * dy);
+
+		return dist < circle.radius;
 	}
-	return dist < radiusSum;
-}
-bool circleIntersect(float x1, float y1, float r1, float x2, float y2, float r2, float& depenetrateX, float& depenetrateY)
-{
-	float dx = x2 - x1;
-	float dy = y2 - y1;
-
-	float dist = sqrt(dx * dx + dy * dy);
-
-	float radiusSum = r1 + r2;
-	if (dist < radiusSum)
-	{
-		depenetrateX = dx;
-		depenetrateY = dy;
-		normalize(depenetrateX, depenetrateY);
-		depenetrateX *= radiusSum - dist;
-		depenetrateY *= radiusSum - dist;
-	}
-	return dist < radiusSum;
-}
-
-bool pointCircleIntersect(float x, float y, const Circle& circle)
-{
-	float dx = x - circle.x;
-	float dy = y - circle.y;
-
-	float dist = sqrt(dx * dx + dy * dy);
-
-	return dist < circle.radius;
-}
 
 }

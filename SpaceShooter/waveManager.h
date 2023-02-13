@@ -2,12 +2,11 @@
 #include "musicManager.h"
 #define WAVECOUNT 6
 
-
 struct Wave
 {
-	int quarterNoteInterval; // how many quarternotes between spawns
+	int quarterNoteInterval; // how many quarter notes between spawns
 	int totalSpawns;
-	int delayUntilNextWave; // how many quarternotes until next wave begins
+	int delayUntilNextWave; // how many quarter notes until next wave begins
 	int spawnCount;
 	bool bigRockHasBeenSpawned;
 };
@@ -16,9 +15,8 @@ struct Wave
 /// 
 /// Everything being static is a workaround to make the function
 /// "onQuarterNote()" work with a custom delegate (see musicManager.h onQuarterNote).
-/// 
-/// I will try to make the delegate work with non-static methods (if it's possible)
-///	I had planned to make use of the quarternote delegate in more places, but not in this condition
+///
+///	If I had more time, I'd try to make the delegate work with non-static methods
 /// </summary>
 struct WaveManager
 {
@@ -39,10 +37,11 @@ private:
 	inline static MusicManager* musicManager;
 
 public:
-	static void initialize(MusicManager* musicManager);
+	static void initialize(MusicManager* musicManager, int starCount);
 	static void start();
 	static void pause();
 	static void restart();
+	static void spawnStar();
 
 private:
 	static void spawnAsteroid();

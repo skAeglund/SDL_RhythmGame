@@ -1,6 +1,4 @@
 #pragma once
-#include <iostream>
-#define PI 3.14159265f
 
 namespace Vector2D
 {
@@ -8,12 +6,12 @@ namespace Vector2D
 		float x;
 		float y;
 		Vector2(float x = 0.f, float y = 0.f);
-		float length();
+		float length() const;
 		void clamp(float min, float max);
 		void normalize();
-		Vector2 normalized();
-		Vector2 perpendicularVectorClockwise();
-		Vector2 perpendicularVectorCounterClockwise();
+		Vector2 normalized() const;
+		Vector2 perpendicularVector() const;
+		Vector2 perpendicularVector(bool counterClock) const;
 
 		Vector2& operator*=(float rhs)
 		{
@@ -35,15 +33,15 @@ namespace Vector2D
 		}
 		Vector2 operator*(const float& rhs) const
 		{
-			return Vector2(x * rhs, y * rhs);
+			return { x * rhs, y * rhs };
 		}
 		Vector2 operator-(const Vector2& rhs) const
 		{
-			return Vector2(x - rhs.x, y - rhs.y);
+			return { x - rhs.x, y - rhs.y };
 		}
 		Vector2 operator+(const Vector2& rhs) const
 		{
-			return Vector2(x + rhs.x, y + rhs.y);
+			return { x + rhs.x, y + rhs.y };
 		}
 	};
 
@@ -61,5 +59,10 @@ namespace Vector2D
 	void makePerpendicularClockwise(float& x, float& y);
 
 	void normalize(float& x, float& y);
+
+	void rotatePoint(float& x, float& y, float centerX, float centerY, float angleInDegrees);
+
 }
+
+
 

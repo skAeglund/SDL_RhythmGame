@@ -1,5 +1,9 @@
-// SpaceShooter.cpp : This file contains the 'main' function. Program execution begins and ends there.
-//
+// Made by: Anders Hägglund, 2022
+
+// Note: This was an assignment in data-oriented programming
+// which is why a data-oriented approach was used in some cases
+// where an object oriented approach probably would make more sense
+
 #include <algorithm>
 #include <iostream>
 #include <map>
@@ -10,85 +14,57 @@
 #include "sprite.h"
 #include "crosshair.h"
 #include "input.h"
-#include "musicManager.h"
 #include "waveManager.h"
 #include "UI.h"
+#include "rendering.h"
 
 using namespace std;
 using namespace Engine;
-using namespace Collision;
 
+UI::Button waitForButtonPress(UI::Menu menu, MusicManager& musicManager, Crosshair& crosshair, int playerHealth);
 
-ButtonType waitForButtonPress(MusicManager& musicManager, Crosshair& crosshair, ButtonType availButtons[], int bCount, Menu menu);
-
-int main(int argc, char** args) {
-
-	
+int main(int argc, char** args)
+{
 	Engine::initializeEngine(Assets::texturePaths, size(Assets::texturePaths));
 	
-	Player player{ };
-	Position playerPosition(Position(WIDTH / 2 - player.radius / 2, HEIGHT * 0.8f, 45));
-	Engine::createObject(playerPosition, Rotation(10,0), Velocity(),  20, "Content/Sprites/player90x90.png", Tag::Player);
 	
-	Crosshair crosshair(25, 25, "Content/Sprites/crosshair.png", Engine::getRenderer());
+	Crosshair crosshair(25, 25, Assets::crosshairTexturePath, Rendering::getRenderer());
 
-	MusicManager musicManager;
-	musicManager.initialize(Assets::beats);
+	MusicManager musicManager{ Assets::beats };
+	Player player{ &musicManager , Rendering::getRenderer() };
 
-	WaveManager::initialize(&musicManager);
+	WaveManager::initialize(&musicManager, 15);
 
-	ButtonType availableButtons[] = { ButtonType::start, ButtonType::quit};
-	ButtonType buttonPressed = waitForButtonPress(musicManager, crosshair, availableButtons, 2, Menu::intro);
-	bool gameRunning = buttonPressed != ButtonType::quit;
+	UI::Button buttonPressed = waitForButtonPress(UI::Menu::intro, musicManager, crosshair, player.remainingHealth);
+	bool gameRunning = buttonPressed != UI::Button::quit;
 	bool gamePaused = false;
 
 	musicManager.startPlaying();
 	WaveManager::start();
 
+	// MAIN GAME LOOP
 	while (gameRunning)
 	{
 		const float deltaTime = Engine::updateTicks();
+		Engine::updateObjects(musicManager.data->wholeNoteLength);
 		Engine::printTimeStats();
 
 		musicManager.update(deltaTime);
 		musicManager.printStats();
 
-		Engine::renderClear();
-		Engine::drawBackground();
-		Engine::drawLasers(SDL_Color(0, 200, 255, 255));
-		Engine::sortObjects();
-		Engine::moveObjects();
-		Engine::rotateObjects();
-		Engine::drawObjects();
-		Engine::drawHealthLine(musicManager.data);
-		Engine::drawBeatCircles(musicManager.data);
-
-		const int playerDamage = Engine::checkForObjectDestruction(musicManager);
-
-		if (playerDamage > 0)
-		{
-			player.remainingHealth -= playerDamage;
-			if (player.remainingHealth <= 0)
-			{
-				musicManager.stopPlaying();
-				Engine::clearObjects();
-			}
-			musicManager.playGlitchSound();
-		}
+		Rendering::renderClear();
+		Engine::drawEverything(musicManager.data, player.remainingHealth);
+		Engine::checkForObjectDestruction(&player);
 		
-		//drawColliders(); // use this to show colliders in game
-		
-		player.update(deltaTime);
-		crosshair.update();
-		crosshair.draw(Engine::getRenderer());
+		player.update(deltaTime, musicManager.data->pulseMultiplier);
+		crosshair.draw(Rendering::getRenderer(), musicManager.data->quarterNoteProgress, player.timeSinceLastFail);
 
 		handleInputEvents(player, musicManager, gameRunning, gamePaused, deltaTime);
 		if (gamePaused)
 		{
 			WaveManager::pause();
-			ButtonType availableButtons[] = { ButtonType::resume, ButtonType::quit };
-			buttonPressed = waitForButtonPress(musicManager, crosshair, availableButtons, 2, Menu::pause);
-			gameRunning = buttonPressed != ButtonType::quit;
+			buttonPressed = waitForButtonPress(UI::Menu::pause, musicManager, crosshair, player.remainingHealth);
+			gameRunning = buttonPressed != UI::Button::quit;
 			gamePaused = false;
 			if (gameRunning)
 			{
@@ -98,49 +74,53 @@ int main(int argc, char** args) {
 		else if (player.remainingHealth <= 0)
 		{
 			WaveManager::pause();
-			ButtonType availableButtons[] = { ButtonType::restart, ButtonType::quit };
-			buttonPressed = waitForButtonPress(musicManager, crosshair, availableButtons, 2, Menu::gameOver);
-			gameRunning = buttonPressed != ButtonType::quit;
-			if (gameRunning)
-			{
-				player.remainingHealth = player.maxHealth;
-				musicManager.changeBeat(0);
-				WaveManager::restart();
-			}
+			buttonPressed = waitForButtonPress(UI::Menu::gameOver, musicManager, crosshair, player.remainingHealth);
+			gameRunning = buttonPressed != UI::Button::quit;
+			if (!gameRunning) break;
+			
+			player.reset();
+			musicManager.changeBeat(0);
+			WaveManager::restart();
 			Engine::resetKeys();
 		}
 
-		Engine::renderPresent();
+		Rendering::renderPresent();
 		Engine::delayNextFrame();
 	}
 	Engine::unloadTextures();
 	musicManager.unload();
 	crosshair.destroy();
+	player.destroy();
 	cout << "Quitting ..." << endl;
 	Engine::quit();
 
 	return 0;
 }
 
-// returns false if the player decided to quit during the pause
-ButtonType waitForButtonPress(MusicManager& musicManager, Crosshair& crosshair, ButtonType avaiablelButtons[], int bCount, Menu menu)
+// Loops during intro, pause and game over menu until player presses a button
+UI::Button waitForButtonPress(UI::Menu menu, MusicManager& musicManager, Crosshair& crosshair, int playerHealth)
 {
-
-	Buttons buttons(getRenderer(), avaiablelButtons, bCount);
+	SDL_Renderer* renderer = Rendering::getRenderer();
+	UI::Buttons buttons(renderer, menu);
 
 	Sprite overlay(WIDTH, HEIGHT);
-	overlay.load(Assets::menuOverlayPaths.at(menu), Engine::getRenderer());
-	ButtonType buttonPressed = ButtonType::none;
+	overlay.load(Assets::menuOverlayPaths.at(menu), Rendering::getRenderer());
+	UI::Button buttonPressed = UI::Button::none;
 
 	int mouseX, mouseY;
 	float elapsedFadeTime = 0.f;
 	const float fadeOutTime = 0.33f;
 	float fadeOutProgress = 0;
-	while (buttonPressed == ButtonType::none || elapsedFadeTime < fadeOutTime)
+	while (buttonPressed == UI::Button::none || elapsedFadeTime < fadeOutTime)
 	{
+		Rendering::renderClear();
 		const float deltaTime = Engine::updateTicks();
+		Engine::rotateObjects();
+		Engine::updateObjectsLifetime(musicManager.data->wholeNoteLength);
+		Engine::drawEverything(musicManager.data, playerHealth, true);
+		musicManager.update(deltaTime);
 
-		if (buttonPressed == ButtonType::none)
+		if (buttonPressed == UI::Button::none)
 		{
 			SDL_GetMouseState(&mouseX, &mouseY);
 			if (isPressingMouseButton())
@@ -150,25 +130,18 @@ ButtonType waitForButtonPress(MusicManager& musicManager, Crosshair& crosshair, 
 		{
 			elapsedFadeTime += deltaTime;
 			fadeOutProgress = clamp(elapsedFadeTime / (fadeOutTime+0.05f), 0.f, 0.99f);
-			overlay.updateOpacity(pow(1.f - fadeOutProgress,2));
+			overlay.updateOpacity(powf(1.f - fadeOutProgress,2));
 		}
 
-		Engine::renderClear();
-		Engine::drawBackground();
-		musicManager.update(deltaTime);
-		Engine::drawObjects();
-		Engine::rotateObjects();
-		Engine::drawHealthLine(musicManager.data);
-		overlay.draw(0, 0, WIDTH, HEIGHT, Engine::getRenderer());
+		overlay.draw(0, 0, WIDTH, HEIGHT, renderer);
 
-		if (fadeOutProgress == 0)
-			buttons.draw(getRenderer(), mouseX, mouseY);
+		if (fadeOutProgress <= 0.001f)
+			buttons.draw(renderer, mouseX, mouseY);
 		else 
-			buttons.draw(getRenderer(), mouseX, mouseY, buttonPressed, 1 - fadeOutProgress);
+			buttons.draw(renderer, mouseX, mouseY, buttonPressed, 1 - fadeOutProgress);
 
-		crosshair.update();
-		crosshair.draw(Engine::getRenderer());
-		Engine::renderPresent();
+		crosshair.draw(renderer, 1.f, 2.f);
+		Rendering::renderPresent();
 		SDL_Delay(16);
 	}
 	overlay.destroy();

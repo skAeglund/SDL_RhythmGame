@@ -2,7 +2,17 @@
 #include "engine.h"
 #include "vector2.h"
 #include "musicManager.h"
-#define HEALTH_LINE_HEIGHT HEIGHT - 100
+#include "sprite.h"
+#include "UI.h"
+
+#if HEIGHT == 1080
+	constexpr float playerRadius = 45;
+	#define HEALTH_LINE_HEIGHT HEIGHT - 100
+#else // 720
+	constexpr float playerRadius = 40;
+	#define HEALTH_LINE_HEIGHT HEIGHT - 50
+#endif
+
 
 using namespace Vector2D;
 /// <summary>
@@ -12,17 +22,19 @@ using namespace Vector2D;
 struct Player
 {
 	Vector2 velocity{ 0.f,0.f };
-	float radius = 45;
+	float radius = playerRadius;
 	int maxHealth = 12;
-	// this is static so that it can be used by a static function (see wavemanager)
-	inline static int remainingHealth;
+	int remainingHealth;
+	float timeSinceLastFail = 2.f;
+	float timeSinceLastSuccess = 2.f;
+	MusicManager* musicManager;
+	Sprite overlay;
 
-	//SDL_Texture* forceBallTexture;
-
-	Player();
-	void update(float deltaTime);
-	void shootBall(int mouseX, int mouseY);
+	Player(MusicManager* musicManager, SDL_Renderer* renderer);
+	void update(float deltaTime, float pulseMultiplier);
 	void shootLaser(int mouseX, int mouseY, MusicData* musicData, bool& wasShotSuccessful);
 	void reset();
+	void takeDamage(int damage);
+	void destroy();
 };
 

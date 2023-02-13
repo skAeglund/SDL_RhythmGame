@@ -1,5 +1,4 @@
 #pragma once
-#include <SDL.h>
 #include <SDL_mixer.h>
 #include "delegate.h"
 #define NUMBER_OF_BEATS 3
@@ -17,6 +16,7 @@ struct Beat
 // contains data used for rhythm game features
 struct MusicData
 {
+	// note active states - decides when certain input actions are acceptable
 	bool wholeNoteActive = false;
 	bool halfNoteActive = false;
 	bool quarterNoteActive = false;
@@ -66,15 +66,16 @@ private:
 public:
 	Delegate<std::function<void()>> onQuarterNote;
 
-	bool initialize(Beat inputBeats[NUMBER_OF_BEATS]);
+	MusicManager(Beat inputBeats[NUMBER_OF_BEATS]);
 	bool update(float deltaTime);
 	void startPlaying();
-	void stopPlaying();
+	void stopPlaying() const;
 	void changeBeat(int index = -1);
+	bool getBeatActiveState(float timeSinceLastBeat, float noteLength) const;
 
-	void playLaserSound(bool successfulLaser);
-	void playGlitchSound();
+	void playLaserSound(bool successfulLaser) const;
+	void playGlitchSound() const;
 
-	void printStats();
-	void unload();
+	void printStats() const;
+	void unload() const;
 };

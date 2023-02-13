@@ -1,19 +1,26 @@
 #include "player.h"
-#include "input.h"
-#include <iostream>
 #include <algorithm>
+#include "assets.h"
+#include "easingFunctions.h"
+#include "input.h"
+#include "engine.h"
 
 #define MAXVELOCITY 400.f
 #define FRICTION 2.f
 
 using namespace Engine;
 
-Player::Player()
+Player::Player(MusicManager* musicManager, SDL_Renderer* renderer) : remainingHealth(maxHealth), musicManager(musicManager)
 {
-	Player::remainingHealth = maxHealth;
+	const Position pos(Position( WIDTH / 2 - playerRadius / 2, HEIGHT * 0.8f, playerRadius));
+	Engine::createObject(pos, Rotation(10, 0), Velocity(), 20, Assets::playerTexturePath, Tag::Player);
+
+	overlay = Sprite(200, 200);
+	overlay.load(Assets::sphericalLightPath, renderer);
+	SDL_SetTextureBlendMode(overlay.texture, SDL_BLENDMODE_ADD);
 }
 
-void Player::update(float deltaTime)
+void Player::update(float deltaTime, float pulseMultiplier)
 {
 	Vector2 inputDirection;
 	if (Engine::getKeyDown(InputKey::moveLeft))
@@ -30,40 +37,111 @@ void Player::update(float deltaTime)
 	velocity += inputDirection * 500.f *deltaTime;
 	velocity.clamp(0, MAXVELOCITY);
 
-	Vector2 friction = velocity * deltaTime * FRICTION;
+	const Vector2 friction = velocity * deltaTime * FRICTION;
 	velocity -= friction;
 	Engine::updatePlayerVelocity(velocity.x, velocity.y);
 
-}
+	//timeSinceLastFail += deltaTime;
+	//timeSinceLastSuccess += deltaTime;
 
-// this is inactivated for now
-void Player::shootBall(int mouseX, int mouseY)
-{
-	Vector2 mousePosition{ (float)mouseX, (float)mouseY };
-	Position position = Engine::getPlayerPos();
-	Vector2 centerPosition{ (position.x), (position.y) };
-	Vector2 direction = mousePosition - centerPosition;
-	direction.normalize();
-	centerPosition = centerPosition + direction * (radius +22);
-	Velocity projectileVelocity(direction.x * 700, direction.y* 700);
-	Position pos{ centerPosition.x , centerPosition.y , 20.f};
-	Engine::createObject(pos, Rotation(0,0), projectileVelocity, 10.f/*, forceBallTexture*/);
+	constexpr float fadeOutTime = 2.f;
+
+	// draw laser shot overlay
+	if (timeSinceLastSuccess < fadeOutTime || timeSinceLastFail < fadeOutTime)
+	{
+		timeSinceLastFail += deltaTime;
+		timeSinceLastSuccess += deltaTime;
+		// after failed shot
+		if (timeSinceLastFail < timeSinceLastSuccess)
+		{
+			// tint player texture red for a duration after failed shot
+			const int c = std::lerp(0, 255, Ease::Out(std::clamp(timeSinceLastFail / fadeOutTime, 0.f, 1.f), 2));
+			const Color tint(255, c, c, 255);
+			Engine::updatePlayerTextureMod(tint);
+
+			const float progress = timeSinceLastFail / fadeOutTime;
+			const int size = 150;
+			const Position playerPos = Engine::getPlayerPos();
+			overlay.updateOpacity(1 - Ease::Out(progress, 3));
+			overlay.draw(playerPos.x - size / 2, playerPos.y - size / 2, size, size);
+		}
+		else // after successful shot
+		{
+			const float progress = timeSinceLastSuccess / fadeOutTime;
+			const int size = static_cast<int>(std::lerp(150, 100, Ease::Out(progress, 2)));
+			const Position playerPos = Engine::getPlayerPos();
+			const float opacityMultiplier = max(1 - Ease::Out(progress, 5), Ease::InOutSine(pulseMultiplier) * 0.2f + 0.3f);
+			overlay.updateOpacity(opacityMultiplier);
+			overlay.draw(playerPos.x - size / 2, playerPos.y - size / 2, size, size);
+
+			Engine::updatePlayerTextureMod(Color(255 * Ease::Out(progress + 0.1f, 5), 255.f, 255.f, 255.f));
+		}
+		if (timeSinceLastSuccess > fadeOutTime && timeSinceLastFail > fadeOutTime)
+		{
+			SDL_SetTextureColorMod(overlay.texture, 255, 255, 255);
+			SDL_SetTextureBlendMode(overlay.texture, SDL_BLENDMODE_BLEND);
+		}
+	}
+	else
+	{
+		const int size = 100;
+		const Position playerPos = Engine::getPlayerPos();
+		overlay.updateOpacity(Ease::InOutSine(pulseMultiplier) * 0.2f + 0.3f);
+		overlay.draw(playerPos.x - size / 2, playerPos.y - size / 2, size, size);
+	}
+		//Engine::updatePlayerTextureMod(Color(255, 255, 255, 255).multiplied(1 - (Ease::InOutSine(1 - pulseMultiplier) * 0.2f)));
+
 }
 
 void Player::shootLaser(int mouseX, int mouseY, MusicData* musicData, bool& wasShotSuccessful)
 {
-	Vector2 mousePosition{ (float)mouseX, (float)mouseY };
+	const Vector2 mousePosition{ static_cast<float>(mouseX), static_cast<float>(mouseY) };
 	Position playerPos = Engine::getPlayerPos();
 	Vector2 centerPos = Vector2(playerPos.x, playerPos.y);
 	Vector2 direction = mousePosition - centerPos;
 	direction.normalize();
 	centerPos = centerPos + direction * (radius);
-	playerPos = Position(centerPos.x, centerPos.y);
-	wasShotSuccessful = Engine::addLaser(Laser(playerPos.x, playerPos.y, (float)mouseX, (float)mouseY), musicData);
+	playerPos = Position{ centerPos.x, centerPos.y };
+
+	const Laser newLaser{ {LASER_DEFAULT_LIFETIME}, playerPos.x, playerPos.y, mousePosition.x, mousePosition.y };
+	wasShotSuccessful = Engine::addLaser(newLaser, musicData);
+
+	if (!wasShotSuccessful)
+	{
+		SDL_SetTextureColorMod(overlay.texture, 255, 0, 0);
+		SDL_SetTextureBlendMode(overlay.texture, SDL_BLENDMODE_BLEND);
+		timeSinceLastFail = 0;
+	}
+	else
+	{
+		SDL_SetTextureColorMod(overlay.texture, 255, 255, 255);
+		SDL_SetTextureBlendMode(overlay.texture, SDL_BLENDMODE_ADD);
+		timeSinceLastSuccess = 0;
+	}
+		
 }
 
 void Player::reset()
 {
 	remainingHealth = maxHealth;
 	velocity = { 0.f, 0.f };
+}
+
+void Player::takeDamage(int damage)
+{
+	musicManager->playGlitchSound();
+	if (remainingHealth > 0)
+		remainingHealth -= damage;
+
+	if(remainingHealth <= 0)
+	{
+		musicManager->stopPlaying();
+		Engine::clearObjects();
+		musicManager->playGlitchSound();
+	}
+}
+
+void Player::destroy()
+{
+	overlay.destroy();
 }

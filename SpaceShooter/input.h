@@ -1,13 +1,11 @@
 #pragma once
+#include "collision.h"
 #include "engine.h"
 #include "player.h"
-#include "UI.h"
 
 using namespace Collision;
 
 void handleInputEvents(Player& player, MusicManager& musicManager, bool& gameRunning, bool& gamePaused, float deltaTime);
-
-Button handlePausedInput();
 
 bool isPressingMouseButton();
 
