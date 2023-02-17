@@ -29,9 +29,9 @@ void Crosshair::draw(SDL_Renderer* render, float quarterProgress, float timeSinc
 	if (timeSinceLastFail > 0 && timeSinceLastFail < 2)
 	{
 		color = Color{
-			std::lerp(failColor.r, normalColor.r, timeSinceLastFail / 2.f),
-			std::lerp(failColor.g, normalColor.g, timeSinceLastFail / 2.f),
-			std::lerp(failColor.b, normalColor.b, timeSinceLastFail / 2.f),
+			std::lerp(static_cast<float>(failColor.r), static_cast<float>(normalColor.r), timeSinceLastFail / 2.f),
+			std::lerp(static_cast<float>(failColor.g), static_cast<float>(normalColor.g), timeSinceLastFail / 2.f),
+			std::lerp(static_cast<float>(failColor.b), static_cast<float>(normalColor.b), timeSinceLastFail / 2.f),
 			255.f
 		};
 
