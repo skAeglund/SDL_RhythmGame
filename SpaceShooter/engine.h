@@ -36,7 +36,7 @@ namespace Engine
 	void updatePlayerTextureMod(Color color);
 	void createStar(float x, float y, float maxSize, Color color, int lifeTime, float elapsedTime = 0.f);
 	void createStartingStars(int count);
-	void updateObjectsLifetime(float wholeNoteLength);
+	void updateObjectsLifetime(float wholeNoteLength, bool excludeStars = false);
 	
 
 	// ----------- Rendering----------------

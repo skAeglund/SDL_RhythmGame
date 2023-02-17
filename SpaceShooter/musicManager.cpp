@@ -52,6 +52,7 @@ void MusicManager::startPlaying()
 {
 	Mix_FadeInMusic(currentBeat.music, -1, (int)(data->wholeNoteLength*2000));
 	loadTime = 0.2f;
+	data->musicIsPlaying = true;
 }
 void MusicManager::stopPlaying() const
 {
@@ -59,6 +60,7 @@ void MusicManager::stopPlaying() const
 	Mix_PlayChannel(transitionChannel, transitionSound, 0);
 	Mix_Volume(transitionChannel, MIX_MAX_VOLUME);
 	isTransitioning = true;
+	data->musicIsPlaying = false;
 }
 void MusicManager::changeBeat(int index)
 {

@@ -33,7 +33,7 @@ int main(int argc, char** args)
 	MusicManager musicManager{ Assets::beats };
 	Player player{ &musicManager , Rendering::getRenderer() };
 
-	WaveManager::initialize(&musicManager, 15);
+	WaveManager::initialize(&musicManager, 10);
 
 	UI::Button buttonPressed = waitForButtonPress(UI::Menu::intro, musicManager, crosshair, player.remainingHealth);
 	bool gameRunning = buttonPressed != UI::Button::quit;
@@ -116,7 +116,7 @@ UI::Button waitForButtonPress(UI::Menu menu, MusicManager& musicManager, Crossha
 		Rendering::renderClear();
 		const float deltaTime = Engine::updateTicks();
 		Engine::rotateObjects();
-		Engine::updateObjectsLifetime(musicManager.data->wholeNoteLength);
+		Engine::updateObjectsLifetime(musicManager.data->wholeNoteLength, true);
 		Engine::drawEverything(musicManager.data, playerHealth, true);
 		musicManager.update(deltaTime);
 

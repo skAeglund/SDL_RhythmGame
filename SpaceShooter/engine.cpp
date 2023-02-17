@@ -193,9 +193,11 @@ namespace Engine
 		}
 	}
 
-	void createStar(float x, float y, float maxSize, Color color, int lifeTime, float elapsedTime)
+	void createStar(float x, float y, float maxSize, Color color, int lifeTime, float elapsedLifeTime)
 	{
-		starList.push_back(Star({ static_cast<float>(lifeTime), elapsedTime }, x, y, maxSize, color));
+		if (elapsedTime < 1.f)
+			elapsedLifeTime = 2.f;
+		starList.push_back(Star({ static_cast<float>(lifeTime), elapsedLifeTime }, x, y, maxSize, color));
 	}
 
 	void createStartingStars(int count)
@@ -210,15 +212,18 @@ namespace Engine
 	}
 
 	// Update elapsed lifetime of objects. Remove objects where elapsedLifeTime > totalLifeTime 
-	void updateObjectsLifetime(float wholeNoteLength)
+	void updateObjectsLifetime(float wholeNoteLength, bool excludeStars)
 	{
-		for (size_t i = starList.size(); i >= 1;) //reverse 
+		if (!excludeStars)
 		{
-			i--;
-			starList[i].elapsedLifeTime += deltaTime;
-			if (starList[i].elapsedLifeTime > wholeNoteLength * starList[i].totalLifeTime)
+			for (size_t i = starList.size(); i >= 1;) //reverse 
 			{
-				starList.erase(starList.begin() + i);
+				i--;
+				starList[i].elapsedLifeTime += deltaTime;
+				if (starList[i].elapsedLifeTime > wholeNoteLength * starList[i].totalLifeTime)
+				{
+					starList.erase(starList.begin() + i);
+				}
 			}
 		}
 		for (size_t i = lineList.size(); i >= 1;) 
@@ -495,8 +500,6 @@ namespace Engine
 		std::cout << "| FPS (capped): " << framerate << "    \n| \n";
 		std::cout << "| Object count: " << objectCount << "  \n| \n";
 		std::cout << "| Checks / object: " << collisionChecksPerFrame / objectCount << " \n --------------------- \n";
-
-
 
 		for (int i = 0; i < 7; i++)
 		{

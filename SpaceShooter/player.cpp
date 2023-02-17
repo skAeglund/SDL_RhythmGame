@@ -41,9 +41,6 @@ void Player::update(float deltaTime, float pulseMultiplier)
 	velocity -= friction;
 	Engine::updatePlayerVelocity(velocity.x, velocity.y);
 
-	//timeSinceLastFail += deltaTime;
-	//timeSinceLastSuccess += deltaTime;
-
 	constexpr float fadeOutTime = 2.f;
 
 	// draw laser shot overlay

@@ -133,7 +133,7 @@ void WaveManager::spawnStar()
 	if (quarterNoteCount % 2 == 0)
 	{
 		float heightLimit = 0;
-		for (int i = 0; i < 10; i++)
+		for (int i = 0; i < 16; i++)
 		{
 			// spawn non-blinking longlived star
 			const float randomX = static_cast<float>(rand() % WIDTH);
@@ -145,7 +145,7 @@ void WaveManager::spawnStar()
 		}
 		return;
 	}
-	for (int i = 0; i < 5; i++)
+	for (int i = 0; i < 6; i++)
 	{
 		const int rColor = rand() % 100;
 		int rRed = rand() % 80 + 20;

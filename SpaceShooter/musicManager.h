@@ -16,6 +16,7 @@ struct Beat
 // contains data used for rhythm game features
 struct MusicData
 {
+	bool musicIsPlaying = false;
 	// note active states - decides when certain input actions are acceptable
 	bool wholeNoteActive = false;
 	bool halfNoteActive = false;

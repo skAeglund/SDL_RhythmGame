@@ -222,7 +222,7 @@ namespace Rendering
 
 		const Vector2 offsetDir = unitDirection(start.x, start.y, end.x, end.y).perpendicularVector();
 		const float easeInOutBeat = -(cos(PI * music->pulseMultiplier) - 1) / 2;
-		const float beatMultiplier = (easeInOutBeat / 3) + 0.6667f - (music->halfNoteProgress / 10); // makes the multiplier go from 1 -> 0.66
+		const float beatMultiplier = (easeInOutBeat / 3) + 0.6667f; // makes the multiplier go from 1 -> 0.66
 
 		// draw base line
 		for (int i = 1; i < thickness; i++)
@@ -389,24 +389,38 @@ namespace Rendering
 
 	void drawStars(MusicData* music, std::vector<Star> starList, float elapsedTime)
 	{
-		for (int i = starList.size() - 1; i > 0; i--)
+		if (music->musicIsPlaying)
+			for (int i = starList.size() - 1; i > 0; i--)
+			{
+				const int lifeTime = static_cast<int>(std::round(starList[i].totalLifeTime));
+				const float fadeInTime = lifeTime <= 4 ? 0.04f : 2.f;
+				const float beatMultiplier =
+					lifeTime == 1 ? music->quarterNoteProgress * 0.5f + 0.5f :
+					lifeTime == 2 ? 1 - (music->quarterNoteProgress * 0.5f + 0.5f) :
+					lifeTime == 3 ? Ease::Out(music->pulseMultiplier, 3) :
+					lifeTime == 4 ? 1 - Ease::Out(music->pulseMultiplier, 3) : 1.f;
+				;
+
+				const float normalizedLife = starList[i].elapsedLifeTime / (music->wholeNoteLength * starList[i].totalLifeTime);
+				const float lifeMultiplier = 1 - Ease::Out(normalizedLife, 2);
+				const float fadeInMultiplier = Ease::Out( std::clamp(starList[i].elapsedLifeTime / fadeInTime, 0.f, 1.f), 2);
+				const Color color = starList[i].color;
+				SDL_SetRenderDrawColor(render, color.r, color.g, color.b, color.a * lifeMultiplier * beatMultiplier * fadeInMultiplier);
+				drawStar(starList[i], std::clamp(starList[i].maxSize * lifeMultiplier, 1.f, starList[i].maxSize) * fadeInMultiplier, elapsedTime);
+			}
+		else
 		{
-			const int lifeTime = static_cast<int>(std::round(starList[i].totalLifeTime));
-
-			const float beatMultiplier =
-				lifeTime == 1 ? music->quarterNoteProgress * 0.5f + 0.5f :
-				lifeTime == 2 ? 1 - (music->quarterNoteProgress * 0.5f + 0.5f) :
-				lifeTime == 3 ? Ease::Out(music->pulseMultiplier, 3) :
-				lifeTime == 4 ? 1 - Ease::Out(music->pulseMultiplier, 3) : 1.f;
-			;
-
-			const float normalizedLife = starList[i].elapsedLifeTime / (music->wholeNoteLength * starList[i].totalLifeTime);
-			const float multiplier = 1 - Ease::Out(normalizedLife, 2);
-			const Color color = starList[i].color;
-			SDL_SetRenderDrawColor(render, color.r, color.g, color.b, color.a * multiplier * beatMultiplier);
-			drawStar(starList[i], std::clamp(starList[i].maxSize * multiplier, 1.f, starList[i].maxSize), elapsedTime);
+			for (int i = starList.size() - 1; i > 0; i--)
+			{
+				const float normalizedLife = starList[i].elapsedLifeTime / (music->wholeNoteLength * starList[i].totalLifeTime);
+				const float lifeMultiplier = 1 - Ease::Out(normalizedLife, 2);
+				const Color color = starList[i].color;
+				SDL_SetRenderDrawColor(render, color.r, color.g, color.b, color.a * lifeMultiplier);
+				drawStar(starList[i], starList[i].maxSize, elapsedTime);
+			}
 		}
 	}
+
 
 	// Used for all note lengths, during active beat
 	void drawActiveBeatCircle(Position pos, Color color, float distanceMultiplier = 1.f)
@@ -537,7 +551,7 @@ namespace Rendering
 	void drawBackground()
 	{
 		const SDL_Rect rect(0, 0, WIDTH, HEIGHT);
-		SDL_SetRenderDrawColor(render, 0, 1, 2, 255);
+		SDL_SetRenderDrawColor(render, 0, 7, 14, 255);
 		SDL_RenderFillRect(render, &rect);
 	}
 
